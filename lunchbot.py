@@ -1,29 +1,37 @@
 import requests
 import re
 import sys
+import time
 from datetime import datetime
 from bs4 import BeautifulSoup
-from settings import API_TOKEN
+from settings import API_TOKEN, ROOM_ID
 from collections import namedtuple
 
-StreamItem = namedtuple('StreamItem', ['source', 'time', 'text', 'link'])
+StreamItem = namedtuple('StreamItem', ['source', 'time', 'text', 'link', 'ref_links'])
 
-ROOM_ID = '1807405'
-HIPCHAT_URL = 'https://api.hipchat.com/v2/room/%s/notification?auth_token=%s' % (ROOM_ID, API_TOKEN)
-CFTF_TWITTER_URL = 'https://twitter.com/chiftf_aon'
+HIPCHAT_URL = 'https://textura.hipchat.com/v2/room/%s/notification?auth_token=%s' % (ROOM_ID, API_TOKEN)
+CFTF_HANDLE = 'chiftf_aon'
+CFTF_TWITTER_URL = 'https://twitter.com/%s' % CFTF_HANDLE
+SLEEP_INTERVAL = .5
+
+DEBUG = True
 
 def send_test():
     message = 'this is a test'
-    send_notification(message)
+    resp = send_notification(message)
+    return resp
 
 def send_notification(message):
     payload = build_message_payload(message)
-    requests.post(HIPCHAT_URL, json=payload)
+    if DEBUG:
+        print message
+    else:
+        return requests.post(HIPCHAT_URL, json=payload)
 
 def build_message_payload(message,
-                     color='black',
-                     message_format='text',
-                     notify=False):
+                          color='green',
+                          message_format='text',
+                          notify=False):
     payload = {'message': message,
                'message_format': message_format,
                'color': color,
@@ -60,9 +68,14 @@ class StreamParser(object):
             # Remove ellipsis characters added by Twitter
             text = cls._html_to_text(to_unicode(tweet).replace(u'\u2026', ''))
 
+            refs = tweet.findAll('a', class_='twitter-atreply')
+            ref_links = ['https://twitter.com%s' % ref['href'] for ref in refs]
+
             link = 'https://twitter.com%s' % header.find('a', class_='tweet-timestamp')['href']
 
-            yield StreamItem('%s (@%s)' % (name, username), timestamp, text, link)
+            if username != CFTF_HANDLE:
+                continue
+            yield StreamItem('%s (@%s)' % (name, username), timestamp, text, link, ref_links)
 
 class LunchBot(object):
     def __init__(self):
@@ -73,6 +86,10 @@ class LunchBot(object):
             if item.link in self.tweets:
                 continue
 
-            print item
+            send_notification("Today's food trucks are...")
+            for ref_link in item.ref_links:
+                if ref_link:
+                    send_notification(ref_link)
             self.tweets.add(item.link)
+            time.sleep(SLEEP_INTERVAL)
 
