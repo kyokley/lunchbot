@@ -42,7 +42,8 @@ class StreamParser(object):
         return ' '.join(text.strip().split())
 
     @classmethod
-    def get_tweets(cls, html):
+    def get_tweets(cls, url):
+        html = requests.get(url).content
         document = BeautifulSoup(html, 'html.parser')
 
         for tweet in document.find_all('p', class_='tweet-text'):
@@ -73,4 +74,5 @@ class LunchBot(object):
                 continue
 
             print item
+            self.tweets.add(item.link)
 
