@@ -1,7 +1,7 @@
 import requests
 import time
 from bs4 import BeautifulSoup
-from settings import API_TOKEN, ROOM_ID, COMPANY
+from settings import API_TOKEN, ROOM_ID, COMPANY, DEBUG
 from collections import namedtuple
 
 StreamItem = namedtuple('StreamItem', ['link', 'ref_links'])
@@ -11,8 +11,6 @@ CFTF_HANDLE = 'chiftf_aon'
 CFTF_TWITTER_URL = 'https://twitter.com/%s' % CFTF_HANDLE
 SLEEP_INTERVAL = 60 * 10
 NOTIFICATION_INTERVAL = .5
-
-DEBUG = True
 
 def send_test():
     message = 'this is a test'
@@ -86,3 +84,6 @@ def main():
     while True:
         bot.update()
         time.sleep(SLEEP_INTERVAL)
+
+if __name__ == '__main__':
+    main()
