@@ -75,15 +75,19 @@ class LunchBot(object):
             print e
 
 def main():
+    print 'Running...'
     bot = LunchBot()
     
     if not DEBUG:
         # Consume any old tweets to prepare for the new ones!
         bot.update(send_notifications=False)
 
-    while True:
-        bot.update()
-        time.sleep(SLEEP_INTERVAL)
+    try:
+        while True:
+            bot.update()
+            time.sleep(SLEEP_INTERVAL)
+    except KeyboardInterrupt:
+        print 'Shutting down'
 
 if __name__ == '__main__':
     main()
