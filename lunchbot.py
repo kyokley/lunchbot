@@ -23,7 +23,7 @@ def send_notification(message):
         print message
     else:
         time.sleep(NOTIFICATION_INTERVAL)
-        return requests.post(HIPCHAT_URL, json=payload)
+        return requests.post(HIPCHAT_URL, json=payload, verify=True)
 
 def build_message_payload(message,
                           color='green',
@@ -37,7 +37,7 @@ def build_message_payload(message,
     return payload
 
 def get_tweets(url):
-    html = requests.get(url).content
+    html = requests.get(url, verify=True).content
     document = BeautifulSoup(html, 'html.parser')
 
     for tweet in document.find_all('p', class_='tweet-text'):
