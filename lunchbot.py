@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from settings import API_TOKEN, ROOM_ID, COMPANY, DEBUG
 from collections import namedtuple
 
-StreamItem = namedtuple('StreamItem', ['link', 'ref_links'])
+StreamItem = namedtuple('StreamItem', ['username', 'link', 'ref_links'])
 
 HIPCHAT_URL = 'https://%s.hipchat.com/v2/room/%s/notification?auth_token=%s' % (COMPANY, ROOM_ID, API_TOKEN)
 CFTF_HANDLE = 'chiftf_aon'
@@ -49,10 +49,7 @@ def get_tweets(url):
 
         link = 'https://twitter.com%s' % header.find('a', class_='tweet-timestamp')['href']
 
-        if username != CFTF_HANDLE:
-            continue
-
-        yield StreamItem(link, ref_links)
+        yield StreamItem(username, link, ref_links)
 
 class LunchBot(object):
     def __init__(self):
@@ -66,10 +63,15 @@ class LunchBot(object):
 
                 if send_notifications:
                     send_notification("Today's food trucks are...")
+                else:
+                    print 'The following notifications are not being sent...'
 
                 for ref_link in item.ref_links:
-                    if ref_link and send_notifications:
-                        send_notification(ref_link)
+                    if ref_link:
+                        if send_notifications:
+                            send_notification(ref_link)
+                        else:
+                            print ref_link
                 self.tweets.add(item.link)
         except Exception, e:
             print e
