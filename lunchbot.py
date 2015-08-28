@@ -70,7 +70,7 @@ class LunchBot(object):
                 print
                 if item.username == CFTF_HANDLE:
                     if send_notifications:
-                        send_notification("Today's food trucks are...")
+                        send_notification("Today's food trucks are... (%s)" % datetime.now().strftime('%b-%d'))
                     else:
                         print 'The following notifications are not being sent...'
 
@@ -82,10 +82,11 @@ class LunchBot(object):
                                 print ref_link
                 else:
                     if item.timestamp:
-                        print 'Got a tweet from @%s at %s' % (item.username, item.timestamp)
+                        send_notification('@%s says: (%s)' % 
+                                (item.username, item.timestamp.strftime('%b-%d %I:%M%p')))
                     else:
-                        print 'Got a tweet from @%s' % (item.username)
-                    print item.text
+                        send_notification('@%s says:' % (item.username))
+                    send_notification(item.text)
 
                 self.tweets.add(item.link)
         except Exception, e:
@@ -101,7 +102,9 @@ def main():
 
     try:
         while True:
+            print 'Starting update at %s' % datetime.now()
             bot.update()
+            print 'Finished update at %s' % datetime.now()
             time.sleep(SLEEP_INTERVAL)
     except KeyboardInterrupt:
         print 'Shutting down'
