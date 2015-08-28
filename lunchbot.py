@@ -3,8 +3,9 @@ import time
 from bs4 import BeautifulSoup
 from settings import API_TOKEN, ROOM_ID, COMPANY, DEBUG
 from collections import namedtuple
+from datetime import datetime
 
-StreamItem = namedtuple('StreamItem', ['username', 'link', 'ref_links'])
+StreamItem = namedtuple('StreamItem', ['username', 'link', 'ref_links', 'text', 'timestamp'])
 
 HIPCHAT_URL = 'https://%s.hipchat.com/v2/room/%s/notification?auth_token=%s' % (COMPANY, ROOM_ID, API_TOKEN)
 CFTF_HANDLE = 'chiftf_aon'
@@ -48,8 +49,13 @@ def get_tweets(url):
         ref_links = ['https://twitter.com%s' % ref['href'] for ref in refs]
 
         link = 'https://twitter.com%s' % header.find('a', class_='tweet-timestamp')['href']
+        text = tweet and tweet.text.encode('ascii', errors='ignore')
+        data_time = tweet.find_previous().get('data-time')
+        timestamp = (data_time and
+                     datetime.fromtimestamp(int(data_time)) or
+                     None)
 
-        yield StreamItem(username, link, ref_links)
+        yield StreamItem(username, link, ref_links, text, timestamp)
 
 class LunchBot(object):
     def __init__(self):
@@ -61,17 +67,26 @@ class LunchBot(object):
                 if item.link in self.tweets:
                     continue
 
-                if send_notifications:
-                    send_notification("Today's food trucks are...")
-                else:
-                    print 'The following notifications are not being sent...'
+                print
+                if item.username == CFTF_HANDLE:
+                    if send_notifications:
+                        send_notification("Today's food trucks are...")
+                    else:
+                        print 'The following notifications are not being sent...'
 
-                for ref_link in item.ref_links:
-                    if ref_link:
-                        if send_notifications:
-                            send_notification(ref_link)
-                        else:
-                            print ref_link
+                    for ref_link in item.ref_links:
+                        if ref_link:
+                            if send_notifications:
+                                send_notification(ref_link)
+                            else:
+                                print ref_link
+                else:
+                    if item.timestamp:
+                        print 'Got a tweet from @%s at %s' % (item.username, item.timestamp)
+                    else:
+                        print 'Got a tweet from @%s' % (item.username)
+                    print item.text
+
                 self.tweets.add(item.link)
         except Exception, e:
             print e
