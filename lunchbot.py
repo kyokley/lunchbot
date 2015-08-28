@@ -18,9 +18,9 @@ def send_test():
     resp = send_notification(message)
     return resp
 
-def send_notification(message):
+def send_notification(message, dry_run=False):
     payload = build_message_payload(message)
-    if DEBUG:
+    if DEBUG or dry_run:
         print message
     else:
         time.sleep(NOTIFICATION_INTERVAL)
@@ -61,7 +61,7 @@ class LunchBot(object):
     def __init__(self):
         self.tweets = set()
 
-    def update(self, send_notifications=True):
+    def update(self, dry_run=False):
         try:
             for item in get_tweets(CFTF_TWITTER_URL):
                 if item.link in self.tweets:
@@ -69,20 +69,13 @@ class LunchBot(object):
 
                 print
                 if item.username == CFTF_HANDLE:
-                    if send_notifications:
-                        send_notification("Today's food trucks are...")
-                    else:
-                        print 'The following notifications are not being sent...'
+                    send_notification("Today's food trucks are...", dry_run=dry_run)
 
                     for ref_link in item.ref_links:
                         if ref_link:
-                            if send_notifications:
-                                send_notification(ref_link)
-                            else:
-                                print ref_link
+                            send_notification(ref_link, dry_run=dry_run)
                 else:
-                    send_notification('@%s says:' % (item.username))
-                    send_notification(item.text)
+                    send_notification('@%s says:\n%s' % (item.username, item.text), dry_run=dry_run)
 
                 self.tweets.add(item.link)
         except Exception, e:
@@ -94,7 +87,7 @@ def main():
     
     if not DEBUG:
         # Consume any old tweets to prepare for the new ones!
-        bot.update(send_notifications=False)
+        bot.update(dry_run=True)
 
     try:
         while True:
