@@ -45,8 +45,12 @@ def get_tweets(url):
         header = tweet.find_previous('div', class_='stream-item-header')
         username = header.find('span', class_='username').b.string
 
+        ref_links = []
+        if username != CFTF_HANDLE:
+            ref_links.append('https://twitter.com/%s' % username)
+
         refs = tweet.findAll('a', class_='twitter-atreply')
-        ref_links = ['https://twitter.com%s' % ref['href'] for ref in refs]
+        ref_links.extend(['https://twitter.com%s' % ref['href'] for ref in refs])
 
         link = 'https://twitter.com%s' % header.find('a', class_='tweet-timestamp')['href']
         text = tweet and tweet.text.encode('ascii', errors='ignore')
@@ -54,6 +58,7 @@ def get_tweets(url):
         timestamp = (data_time and
                      datetime.fromtimestamp(int(data_time)) or
                      None)
+
 
         yield StreamItem(username, link, ref_links, text, timestamp)
 
@@ -75,7 +80,12 @@ class LunchBot(object):
                         if ref_link:
                             send_notification(ref_link, dry_run=dry_run)
                 else:
-                    send_notification('@%s says:\n%s' % (item.username, item.text), dry_run=dry_run)
+                    send_notification('@%s says:\n%s\n%s' % 
+                            (item.username,
+                             item.text,
+                             item.ref_links and item.ref_links[0] or ''
+                             ), 
+                            dry_run=dry_run)
 
                 self.tweets.add(item.link)
         except Exception, e:
