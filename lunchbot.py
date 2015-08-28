@@ -80,12 +80,14 @@ class LunchBot(object):
                         if ref_link:
                             send_notification(ref_link, dry_run=dry_run)
                 else:
-                    send_notification('@%s says:\n%s\n%s' % 
+                    send_notification('@%s says:\n%s' % 
                             (item.username,
                              item.text,
-                             item.ref_links and item.ref_links[0] or ''
                              ), 
                             dry_run=dry_run)
+                    ref_link = item.ref_links and item.ref_links[0] or ''
+                    if ref_link:
+                        send_notification(ref_link, dry_run=dry_run)
 
                 self.tweets.add(item.link)
         except Exception, e:
