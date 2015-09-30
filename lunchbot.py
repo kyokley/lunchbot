@@ -8,8 +8,11 @@ from datetime import datetime
 StreamItem = namedtuple('StreamItem', ['username', 'link', 'ref_links', 'text', 'timestamp'])
 
 HIPCHAT_URL = 'https://%s.hipchat.com/v2/room/%s/notification?auth_token=%s' % (COMPANY, ROOM_ID, API_TOKEN)
-CFTF_HANDLE = 'chiftf_aon'
-CFTF_TWITTER_URL = 'https://twitter.com/%s' % CFTF_HANDLE
+CFTF_HANDLES = {'chiftf_aon': 'Aon',
+                'chiftf_30elake': 'State & Lake'}
+CFTF_TWITTER_URL_TEMPLATE = 'https://twitter.com/%s'
+EXCLUDES = ['fidotogo', # Be sure to define these in all lowercase!!!!
+        ]
 SLEEP_INTERVAL = 60 * 10
 NOTIFICATION_INTERVAL = .5
 
@@ -45,8 +48,11 @@ def get_tweets(url):
         header = tweet.find_previous('div', class_='stream-item-header')
         username = header.find('span', class_='username').b.string
 
+        if username.lower() in EXCLUDES:
+            continue
+
         ref_links = []
-        if username != CFTF_HANDLE:
+        if username not in CFTF_HANDLES:
             ref_links.append('https://twitter.com/%s' % username)
 
         refs = tweet.findAll('a', class_='twitter-atreply')
@@ -68,28 +74,31 @@ class LunchBot(object):
 
     def update(self, dry_run=False):
         try:
-            for item in get_tweets(CFTF_TWITTER_URL):
-                if item.link in self.tweets:
-                    continue
+            for handle in CFTF_HANDLES:
+                url = CFTF_TWITTER_URL_TEMPLATE % handle
 
-                print
-                if item.username == CFTF_HANDLE:
-                    send_notification("Today's food trucks are...", dry_run=dry_run)
+                for item in get_tweets(url):
+                    if item.link in self.tweets:
+                        continue
 
-                    for ref_link in item.ref_links:
+                    print
+                    if item.username == handle:
+                        send_notification("Today's food trucks at %s are..." % CFTF_HANDLES[handle], dry_run=dry_run)
+
+                        for ref_link in item.ref_links:
+                            if ref_link:
+                                send_notification(ref_link, dry_run=dry_run)
+                    else:
+                        send_notification('@%s says:\n%s' % 
+                                (item.username,
+                                 item.text,
+                                 ), 
+                                dry_run=dry_run)
+                        ref_link = item.ref_links and item.ref_links[0] or ''
                         if ref_link:
                             send_notification(ref_link, dry_run=dry_run)
-                else:
-                    send_notification('@%s says:\n%s' % 
-                            (item.username,
-                             item.text,
-                             ), 
-                            dry_run=dry_run)
-                    ref_link = item.ref_links and item.ref_links[0] or ''
-                    if ref_link:
-                        send_notification(ref_link, dry_run=dry_run)
 
-                self.tweets.add(item.link)
+                    self.tweets.add(item.link)
         except Exception, e:
             print e
 
