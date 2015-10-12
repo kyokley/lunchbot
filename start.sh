@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source ~/virtualenvs/lunchbot/bin/activate
-python ~/workspace/lunchbot/lunchbot.py
+source /home/yokley/virtualenvs/lunchbot/bin/activate
+python /home/yokley/workspace/lunchbot/lunchbot.py
 deactivate
