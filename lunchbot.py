@@ -83,11 +83,18 @@ class LunchBot(object):
 
                     print
                     if item.username == handle:
-                        send_notification("Today's food trucks at %s are..." % CFTF_HANDLES[handle], dry_run=dry_run)
-
+                        links = []
                         for ref_link in item.ref_links:
-                            if ref_link:
-                                send_notification(ref_link, dry_run=dry_run)
+                            for exclude in EXCLUDES:
+                                if exclude.lower() in ref_link.lower():
+                                    break
+                            else:
+                                links.append(ref_link)
+
+                        if links:
+                            send_notification("Today's food trucks at %s are..." % CFTF_HANDLES[handle], dry_run=dry_run)
+                            for link in links:
+                                send_notification(link, dry_run=dry_run)
                     else:
                         send_notification('@%s says:\n%s' % 
                                 (item.username,
