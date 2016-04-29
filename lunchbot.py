@@ -9,7 +9,8 @@ StreamItem = namedtuple('StreamItem', ['username', 'link', 'ref_links', 'text', 
 
 HIPCHAT_URL = 'https://%s.hipchat.com/v2/room/%s/notification?auth_token=%s' % (COMPANY, ROOM_ID, API_TOKEN)
 CFTF_HANDLES = {'chiftf_aon': 'Aon',
-                'chiftf_30elake': 'State & Lake'}
+                'chiftf_30elake': 'State & Lake',
+                'chiftf_daley': 'Daley Plaza'}
 CFTF_TWITTER_URL_TEMPLATE = 'https://twitter.com/%s'
 EXCLUDES = ['fidotogo', # Be sure to define these in all lowercase!!!!
         ]
